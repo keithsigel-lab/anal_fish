@@ -1,0 +1,72 @@
+* FISH data july 21 2021
+
+import delimited "/Users/keithsigel/local data/FISH project/analysis for paper - classifier - july 2021/FISH_database_tm_beginanalysis.csv", clear 
+encode grade2, gen(hsil)
+replace hsil=0 if hsil==2
+
+gen chr3q26alt=1 if chr3q26=="3q"
+replace chr3q26alt=0 if chr3q26alt==.
+
+gen chr5p15alt=1 if chr5p15=="5p"
+replace chr5p15alt=0 if chr5p15alt==.
+
+gen cen7alt=1 if cen7=="cen7"
+replace cen7alt=0 if cen7alt==.
+
+gen chr20q13alt=1 if chr20q13=="20q"
+replace chr20q13alt=0 if chr20q13alt==.
+
+encode analhrhpv, gen(hpv_alt)
+replace hpv_alt=. if hpv_alt==1
+
+gen alteration=1 if chr20q13alt==1 | chr3q26alt==1 | chr5p15alt==1 | cen7alt==1
+replace alteration=0 if alteration==.
+
+
+gen hpv1618=1 if hpv_alt==2
+replace hpv1618=0 if inlist(hpv_alt,3,4)
+
+gen alteration_or_1618=1 if alteration==1 | hpv1618==1
+replace alteration_or_1618=0 if alteration_and_1618==.
+
+gen hpvany=1 if inlist(hpv_alt,2,4)
+replace hpvany=0 if hpv_alt==3
+
+gen alteration_or_any_hpv=1 if alteration==1 | hpvany==1
+replace alteration_or_any_hpv=0 if alteration_or_any_hpv==.
+
+
+* comparison data
+
+* this code uses data from our triple testing JID paper (that was also shared for a meta-analysis by Clifford et al.)
+* keeps only those w/ histologic LSIL / HSIL
+
+clear
+use "/Users/keithsigel/local data/triple testing analysis/MSM_HIV_Mount_Sinai.dta"
+gen ascus_or_greater_pap=1 if pap>1
+replace ascus_or_greater_pap=0 if ascus_or_greater_pap==.
+gen hsil=1 if biopsy==2
+replace hsil=0 if hsil==.
+
+gen hpv1618=1 if inlist(hpv,1,3)
+replace hpv1618=0 if hpv1618==.
+
+gen anyhpv=1 if hpv!=0
+replace anyhpv=0 if anyhpv==.
+
+gen lsil_or_greater_pap=1 if pap>2
+replace lsil_or_greater_pap=0 if lsil_or_greater_pap==.
+
+gen hsil_or_greater_pap=1 if pap>3
+replace hsil_or_greater_pap=0 if hsil_or_greater_pap==.
+
+* keep only LSIL or HSIL
+keep if biopsy==1 | biopsy==2
+
+
+* for test characteristics cytology
+diagt hsil ascus_or_greater_pap
+* for test characteristics 
+diagt hsil hpv1618 
+
+export delimited using "/Users/keithsigel/local data/FISH project/analysis for paper - classifier - july 2021/cases_from_triple_testing_study.csv", replace
